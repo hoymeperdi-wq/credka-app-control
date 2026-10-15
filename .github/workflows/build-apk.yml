@@ -16,20 +16,27 @@ jobs:
           java-version: 21
       - name: Prepare single HTML app
         run: |
+          echo "=== Archivos en root ==="
+          ls -la
           HTML_FILE=$(ls *.html 2>/dev/null | head -1)
+          if [ -z "$HTML_FILE" ]; then
+            echo "ERROR: No hay .html en la raiz"
+            exit 1
+          fi
+          echo "Usando $HTML_FILE"
           mkdir -p www
           cp "$HTML_FILE" www/index.html
-          if [! -f package.json ]; then
+          if [ ! -f package.json ]; then
             echo '{"name":"credka-app-control","version":"1.0.0","private":true,"dependencies":{"@capacitor/core":"latest","@capacitor/android":"latest"},"devDependencies":{"@capacitor/cli":"latest"}}' > package.json
           fi
-          if [! -f capacitor.config.json ]; then
+          if [ ! -f capacitor.config.json ]; then
             echo '{ "appId": "com.credka.control", "appName": "CREDKA Control", "webDir": "www", "bundledWebRuntime": false }' > capacitor.config.json
           fi
       - name: Install deps
         run: npm install --legacy-peer-deps
       - name: Add android if missing
         run: |
-          if [! -d "android" ]; then
+          if [ ! -d "android" ]; then
             npx cap add android
           fi
       - name: Sync
@@ -47,7 +54,7 @@ jobs:
         run: |
           cd android
           chmod +x gradlew
-         ./gradlew bundleRelease -Pandroid.injected.signing.store.file=$PWD/app/credka.jks -Pandroid.injected.signing.store.password=$STORE_PASS -Pandroid.injected.signing.key.alias=$KEY_ALIAS -Pandroid.injected.signing.key.password=$KEY_PASS --stacktrace
+          ./gradlew bundleRelease -Pandroid.injected.signing.store.file=$PWD/app/credka.jks -Pandroid.injected.signing.store.password=$STORE_PASS -Pandroid.injected.signing.key.alias=$KEY_ALIAS -Pandroid.injected.signing.key.password=$KEY_PASS --stacktrace
       - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
